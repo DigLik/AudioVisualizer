@@ -17,15 +17,15 @@ public static class SignalProcessing
             sumSquares = CalculateSumSquares32BitFloatSimd(data);
             sampleCount = data.Length / 4;
         }
-        else if (bitsPerSample == 16)
-        {
-            sumSquares = CalculateSumSquares16BitSimd(data);
-            sampleCount = data.Length / 2;
-        }
         else if (bitsPerSample == 24)
         {
             sumSquares = CalculateSumSquares24BitScalar(data);
             sampleCount = data.Length / 3;
+        }
+        else if (bitsPerSample == 16)
+        {
+            sumSquares = CalculateSumSquares16BitSimd(data);
+            sampleCount = data.Length / 2;
         }
         else if (bitsPerSample == 8)
         {

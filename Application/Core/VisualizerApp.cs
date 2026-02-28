@@ -8,7 +8,7 @@ namespace AudioVisualizer.Application.Core;
 public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer renderer)
 {
     private const float Sensitivity = 5000f;
-    private const float SmoothingMultiplier = 15f;
+    private const float SmoothingMultiplier = 20f;
     private float _smoothedRms = 0f;
 
     public void Run()
@@ -36,7 +36,6 @@ public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer rendere
         float targetRms = audioSource.CurrentRms;
 
         float smoothFactor = deltaTime * SmoothingMultiplier;
-
         if (smoothFactor > 1f) smoothFactor = 1f;
 
         _smoothedRms = MathUtils.ExponentialMovingAverage(_smoothedRms, targetRms, smoothFactor);

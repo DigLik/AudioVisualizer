@@ -30,7 +30,7 @@ public partial class NativeWasapiAudioSource : IAudioSource
 
     private void InitializeWasapi()
     {
-        Guid clsidDeviceEnum = new Guid(Consts.DeviceEnumeratorClsid); // Использование константы
+        Guid clsidDeviceEnum = new Guid(Consts.DeviceEnumeratorClsid);
         Guid iidDeviceEnum = typeof(ComInterfaces.IMMDeviceEnumerator).GUID;
 
         Ole32.CoCreateInstance(in clsidDeviceEnum, IntPtr.Zero, 1, in iidDeviceEnum, out _deviceEnumerator);
