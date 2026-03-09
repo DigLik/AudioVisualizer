@@ -21,6 +21,10 @@ internal static class Consts
     public const uint WmMoving = 0x0216;
     public const uint WmClose = 0x0010;
     public const uint WmEraseBkgnd = 0x0014;
+    public const uint SwpNoSize = 0x0001;
+    public const uint SwpNoMove = 0x0002;
+    public const uint SwpNoZOrder = 0x0004;
+    public const uint SwpFrameChanged = 0x0020;
 
     // DWM (Отрисовка и темы)
     public const int DwmSbtMainWindow = 2;
@@ -28,11 +32,7 @@ internal static class Consts
     public const int DwmWaUseImmersiveDarkMode = 20;
     public const int DwmWaSystemBackdropType = 38;
 
-    // Параметры GDI и отрисовки
-    public const uint BiRgb = 0;
-    public const uint DibRgbColors = 0;
-    public const uint PmRemove = 0x0001;
-    public const uint SrcCopy = 0x00CC0020;
+    // Параметры отрисовки
     public const int IdcArrow = 32512;
 
     // Прозрачность
@@ -44,5 +44,19 @@ internal static class Consts
     public const uint AudclntStreamflagsEventcallback = 0x00040000;
     public const string DeviceEnumeratorClsid = "BCDE0395-E52F-467C-8E3D-C4579291692E";
 
+    // Сообщения для кастомного заголовка
+    public const uint WmNcCalcSize = 0x0083;
+    public const uint WmNcHitTest = 0x0084;
 
+    // Зоны Hit-Test
+    public const int HtClient = 1;
+    public const int HtCaption = 2;
+    public const int HtLeft = 10;
+    public const int HtRight = 11;
+    public const int HtTop = 12;
+    public const int HtTopLeft = 13;
+    public const int HtTopRight = 14;
+    public const int HtBottom = 15;
+    public const int HtBottomLeft = 16;
+    public const int HtBottomRight = 17;
 }

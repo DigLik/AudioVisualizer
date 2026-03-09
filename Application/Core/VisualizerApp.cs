@@ -5,11 +5,13 @@ using AudioVisualizer.Domain;
 
 namespace AudioVisualizer.Application.Core;
 
-public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer renderer)
+public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer renderer) : IDisposable
 {
-    private const float Sensitivity = 5000f;
-    private const float SmoothingMultiplier = 20f;
-    private float _smoothedRms = 0f;
+    private readonly UnsafeCircularBuffer<float> _rmsHistory = new(16);
+    private readonly UnsafeCircularBuffer<float> _lowFreqRmsHistory = new(16);
+
+    private readonly BeatDetector _beatDetector = new();
+    private readonly AutoGainControl _agc = new();
 
     public void Run()
     {
@@ -22,7 +24,7 @@ public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer rendere
             AcrylicBlurAmount = 0.2f
         };
 
-        renderer.Initialize(800, 600, "Clean Architecture Visualizer", config);
+        renderer.Initialize(800, 800, "", config);
 
         while (!renderer.ShouldClose)
             ProcessFrame();
@@ -34,15 +36,24 @@ public class VisualizerApp(IAudioSource audioSource, IVisualizerRenderer rendere
     {
         float deltaTime = renderer.DeltaTime;
         float targetRms = audioSource.CurrentRms;
+        float lowFreqRms = audioSource.CurrentLowFreqRms;
 
-        float smoothFactor = deltaTime * SmoothingMultiplier;
-        if (smoothFactor > 1f) smoothFactor = 1f;
+        _rmsHistory.Push(targetRms);
+        _lowFreqRmsHistory.Push(lowFreqRms);
 
-        _smoothedRms = MathUtils.ExponentialMovingAverage(_smoothedRms, targetRms, smoothFactor);
-        float radius = _smoothedRms * Sensitivity;
+        float flashBrightness = _beatDetector.Process(_lowFreqRmsHistory, deltaTime);
+        float radius = _agc.Process(targetRms, _rmsHistory.Rms, deltaTime);
 
         renderer.BeginFrame();
+        renderer.FillBackground(1f, 1f, 1f, flashBrightness);
         renderer.DrawCenteredCircle(radius);
         renderer.EndFrame();
+    }
+
+    public void Dispose()
+    {
+        _rmsHistory.Dispose();
+        _lowFreqRmsHistory.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

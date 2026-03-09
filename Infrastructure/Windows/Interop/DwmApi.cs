@@ -9,4 +9,8 @@ internal static partial class DwmApi
 
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS pMarInset);
+
+    [LibraryImport("dwmapi.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DwmDefWindowProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam, out IntPtr plResult);
 }

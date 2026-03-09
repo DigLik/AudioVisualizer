@@ -13,6 +13,9 @@ public partial class NativeWasapiAudioSource : IAudioSource
     private volatile float _currentRms;
     public float CurrentRms => _currentRms;
 
+    private volatile float _currentLowFreqRms;
+    public float CurrentLowFreqRms => _currentLowFreqRms;
+
     private ComInterfaces.IMMDeviceEnumerator? _deviceEnumerator;
     private ComInterfaces.IMMDevice? _device;
     private ComInterfaces.IAudioClient? _audioClient;
@@ -22,6 +25,9 @@ public partial class NativeWasapiAudioSource : IAudioSource
     private Thread? _captureThread;
     private CancellationTokenSource? _cts;
     private bool _isDisposed;
+
+    private readonly LowPassFilter _lpf = new();
+    private int _channels;
 
     private int _bytesPerFrame;
     private int _bitsPerSample;
@@ -44,6 +50,9 @@ public partial class NativeWasapiAudioSource : IAudioSource
         var format = Marshal.PtrToStructure<WAVEFORMATEX>(waveFormatPtr);
         _bytesPerFrame = format.nBlockAlign;
         _bitsPerSample = format.wBitsPerSample;
+
+        _channels = format.nChannels;
+        _lpf.SetParameters(format.nSamplesPerSec, 120f);
 
         const uint streamFlags = Consts.AudclntStreamflagsLoopback | Consts.AudclntStreamflagsEventcallback;
         _audioClient.Initialize(0, streamFlags, 0, 0, waveFormatPtr, Guid.Empty);
@@ -106,6 +115,7 @@ public partial class NativeWasapiAudioSource : IAudioSource
                         int byteCount = (int)numFramesToRead * _bytesPerFrame;
                         var byteSamples = new ReadOnlySpan<byte>(dataPtr.ToPointer(), byteCount);
                         _currentRms = SignalProcessing.CalculateRms(byteSamples, _bitsPerSample);
+                        _currentLowFreqRms = SignalProcessing.CalculateLowPassRms(byteSamples, _bitsPerSample, _channels, _lpf);
                     }
                 }
 

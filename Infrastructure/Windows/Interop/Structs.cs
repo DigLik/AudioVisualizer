@@ -58,33 +58,19 @@ internal unsafe struct WNDCLASSEX
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct BITMAPINFOHEADER
-{
-    public uint biSize;
-    public int biWidth;
-    public int biHeight;
-    public ushort biPlanes;
-    public ushort biBitCount;
-    public uint biCompression;
-    public uint biSizeImage;
-    public int biXPelsPerMeter;
-    public int biYPelsPerMeter;
-    public uint biClrUsed;
-    public uint biClrImportant;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-internal unsafe struct BITMAPINFO
-{
-    public BITMAPINFOHEADER bmiHeader;
-    public fixed uint bmiColors[1];
-}
-
-[StructLayout(LayoutKind.Sequential)]
 internal struct MARGINS
 { 
     public int cxLeftWidth;
     public int cxRightWidth;
     public int cyTopHeight;
     public int cyBottomHeight;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct NCCALCSIZE_PARAMS
+{
+    public RECT rgrc0;
+    public RECT rgrc1;
+    public RECT rgrc2;
+    public IntPtr lppos;
 }

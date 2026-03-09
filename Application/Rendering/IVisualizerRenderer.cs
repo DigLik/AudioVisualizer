@@ -11,4 +11,5 @@ public interface IVisualizerRenderer : IDisposable
     void BeginFrame();
     void EndFrame();
     void DrawCenteredCircle(float radius);
+    void FillBackground(float r, float g, float b, float a);
 }

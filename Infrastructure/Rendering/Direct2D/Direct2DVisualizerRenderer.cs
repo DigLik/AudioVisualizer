@@ -92,6 +92,13 @@ public unsafe partial class Direct2DVisualizerRenderer : IVisualizerRenderer
                 IntPtr.Zero, IntPtr.Zero, hInstance, IntPtr.Zero);
         }
 
+        User32.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0,
+            Consts.SwpFrameChanged | Consts.SwpNoMove | Consts.SwpNoSize | Consts.SwpNoZOrder);
+
+        User32.GetClientRect(_hwnd, out RECT clientRect);
+        _targetWidth = clientRect.right - clientRect.left;
+        _targetHeight = clientRect.bottom - clientRect.top;
+
         ApplyDwmEffects();
         ApplyTheme();
 
@@ -182,13 +189,17 @@ public unsafe partial class Direct2DVisualizerRenderer : IVisualizerRenderer
         if (_renderTarget != null)
         {
             _renderTarget->BeginDraw();
-
             var clearColor = _config.IsWindowTransparent
                 ? new D2D1_COLOR_F { r = 0, g = 0, b = 0, a = 0 }
                 : (_isDarkMode ? new D2D1_COLOR_F { r = 0, g = 0, b = 0, a = 1 } : new D2D1_COLOR_F { r = 1, g = 1, b = 1, a = 1 });
-
-            _renderTarget->Clear(&clearColor);
         }
+    }
+
+    public void FillBackground(float r, float g, float b, float a)
+    {
+        if (_renderTarget == null) return;
+        var color = new D2D1_COLOR_F { r = r * a, g = g * a, b = b * a, a = a };
+        _renderTarget->Clear(&color);
     }
 
     public void EndFrame()
@@ -223,6 +234,47 @@ public unsafe partial class Direct2DVisualizerRenderer : IVisualizerRenderer
     {
         switch (msg)
         {
+            case Consts.WmNcCalcSize:
+            {
+                if (wParam != IntPtr.Zero)
+                {
+                    var nccsp = Marshal.PtrToStructure<NCCALCSIZE_PARAMS>(lParam);
+                    int originalTop = nccsp.rgrc0.top;
+
+                    IntPtr result = User32.DefWindowProc(hWnd, msg, wParam, lParam);
+
+                    nccsp = Marshal.PtrToStructure<NCCALCSIZE_PARAMS>(lParam);
+                    nccsp.rgrc0.top = originalTop;
+                    Marshal.StructureToPtr(nccsp, lParam, false);
+
+                    return result;
+                }
+                break;
+            }
+
+            case Consts.WmNcHitTest:
+            {
+                if (DwmApi.DwmDefWindowProc(hWnd, msg, wParam, lParam, out IntPtr result))
+                    return result;
+
+                User32.GetWindowRect(hWnd, out RECT rect);
+                int x = (short)(lParam.ToInt64() & 0xFFFF);
+                int y = (short)((lParam.ToInt64() >> 16) & 0xFFFF);
+
+                int borderWidth = 8;
+
+                if (x - rect.left < borderWidth && y - rect.top < borderWidth) return Consts.HtTopLeft;
+                if (rect.right - x < borderWidth && y - rect.top < borderWidth) return Consts.HtTopRight;
+                if (x - rect.left < borderWidth && rect.bottom - y < borderWidth) return Consts.HtBottomLeft;
+                if (rect.right - x < borderWidth && rect.bottom - y < borderWidth) return Consts.HtBottomRight;
+                if (x - rect.left < borderWidth) return Consts.HtLeft;
+                if (rect.right - x < borderWidth) return Consts.HtRight;
+                if (y - rect.top < borderWidth) return Consts.HtTop;
+                if (rect.bottom - y < borderWidth) return Consts.HtBottom;
+
+                return Consts.HtCaption;
+            }
+
             case Consts.WmEraseBkgnd:
                 return 1;
 

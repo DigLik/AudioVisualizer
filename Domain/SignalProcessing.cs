@@ -5,6 +5,76 @@ namespace AudioVisualizer.Domain;
 
 public static class SignalProcessing
 {
+    public static float CalculateLowPassRms(ReadOnlySpan<byte> data, int bitsPerSample, int channels, LowPassFilter filter)
+    {
+        if (data.Length == 0 || channels == 0) return 0f;
+
+        float sumSquares = 0f;
+        int frames = 0;
+
+        if (bitsPerSample == 32)
+        {
+            ReadOnlySpan<float> samples = MemoryMarshal.Cast<byte, float>(data);
+            frames = samples.Length / channels;
+            for (int i = 0; i < frames; i++)
+            {
+                float mono = 0f;
+                for (int c = 0; c < channels; c++)
+                    mono += samples[i * channels + c];
+                mono /= channels;
+
+                float filtered = filter.Process(mono);
+                sumSquares += filtered * filtered;
+            }
+        }
+        else if (bitsPerSample == 16)
+        {
+            ReadOnlySpan<short> samples = MemoryMarshal.Cast<byte, short>(data);
+            frames = samples.Length / channels;
+            for (int i = 0; i < frames; i++)
+            {
+                float mono = 0f;
+                for (int c = 0; c < channels; c++)
+                    mono += samples[i * channels + c];
+                mono /= channels;
+
+                float filtered = filter.Process(mono);
+                sumSquares += filtered * filtered;
+            }
+        }
+        else if (bitsPerSample == 24)
+        {
+            frames = data.Length / (3 * channels);
+            for (int i = 0; i < frames; i++)
+            {
+                float mono = 0f;
+                for (int c = 0; c < channels; c++)
+                {
+                    int offset = (i * channels + c) * 3;
+                    mono += data[offset] | (data[offset + 1] << 8) | ((sbyte)data[offset + 2] << 16);
+                }
+                mono /= channels;
+                float filtered = filter.Process(mono);
+                sumSquares += filtered * filtered;
+            }
+        }
+        else if (bitsPerSample == 8)
+        {
+            frames = data.Length / channels;
+            for (int i = 0; i < frames; i++)
+            {
+                float mono = 0f;
+                for (int c = 0; c < channels; c++)
+                    mono += data[i * channels + c] - 128f;
+                mono /= channels;
+                float filtered = filter.Process(mono);
+                sumSquares += filtered * filtered;
+            }
+        }
+
+        return frames > 0 ? MathF.Sqrt(sumSquares / frames) : 0f;
+    }
+
     public static float CalculateRms(ReadOnlySpan<byte> data, int bitsPerSample)
     {
         if (data.Length == 0) return 0f;

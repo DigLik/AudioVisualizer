@@ -68,4 +68,16 @@ internal static partial class User32
 
     [LibraryImport("user32.dll", EntryPoint = "LoadCursorW")]
     public static partial IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 }
